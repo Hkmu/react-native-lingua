@@ -84,3 +84,9 @@ android/generated
 
 # React Native Nitro Modules
 nitrogen/
+src/target/
+
+# Rust build artifacts
+rust/target/
+rust/generated/
+rust/Cargo.lock

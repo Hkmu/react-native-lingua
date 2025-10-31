@@ -1,0 +1,16 @@
+[package]
+name = "lingua_native"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "lingua_native"
+crate-type = ["staticlib", "cdylib"]
+
+[dependencies]
+lingua = "1.7.2"
+libc = "0.2"
+lazy_static = "1.4"
+
+[build-dependencies]
+cbindgen = "0.26.0"
