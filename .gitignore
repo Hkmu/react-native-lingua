@@ -90,3 +90,7 @@ src/target/
 rust/target/
 rust/generated/
 rust/Cargo.lock
+
+# Native library artifacts (built on install)
+android/jniLibs/
+ios/liblingua_native.xcframework/

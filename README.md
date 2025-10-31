@@ -13,67 +13,60 @@ An accurate natural language detection library for React Native, powered by [lin
 
 ## Installation
 
+### Prerequisites
+
+The native libraries are built automatically during installation. You'll need:
+
+1. **Rust toolchain**:
+```sh
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+2. **cargo-ndk** (for Android):
+```sh
+cargo install cargo-ndk
+```
+
+3. **Android NDK** (for Android):
+   - Recommended version: 26.1.10909125
+   - Set environment variables:
+   ```sh
+   export ANDROID_SDK_ROOT=$HOME/Library/Android/sdk
+   export ANDROID_HOME=$HOME/Library/Android/sdk
+   export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/26.1.10909125
+   ```
+
+4. **Xcode** (for iOS on macOS)
+
+### Install the Package
+
 ```sh
 pnpm add react-native-lingua
 # or
 npm install react-native-lingua
-```
-
-or
-
-```sh
+# or
 yarn add react-native-lingua
 ```
 
-### iOS
+The native libraries will be built automatically during `postinstall`.
+
+### iOS Setup
 
 ```sh
 cd ios && pod install
 ```
 
-### Android
+### Android Setup
 
-No additional steps required. The native module will be built automatically.
+No additional steps required.
 
-## Building the Native Module
+## Manual Build (Optional)
 
-Before using the library, you need to build the Rust native module:
-
-### Prerequisites
-
-1. Install Rust toolchain:
+If you need to rebuild the native libraries manually:
 
 ```sh
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
-
-2. Install required tools:
-
-```sh
-# For iOS builds
-cargo install cargo-lipo
-
-# For Android builds
-cargo install cargo-ndk
-```
-
-3. Install Android NDK (for Android builds):
-   - Set `ANDROID_SDK_ROOT`, `ANDROID_HOME`, and `ANDROID_NDK_HOME` environment variables
-   - Recommended NDK version: 26.1.10909125
-
-### Build Commands
-
-```sh
-cd src
-
-# Build for iOS
-make ios
-
-# Build for Android
-make android
-
-# Build for both platforms
-make all
+cd node_modules/react-native-lingua
+npm run build:rust
 ```
 
 ## Usage
