@@ -60,9 +60,6 @@
     "url": "https://github.com/Hkmu/react-native-lingua//issues"
   },
   "homepage": "https://github.com/Hkmu/react-native-lingua/#readme",
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org/"
-  },
   "devDependencies": {
     "@commitlint/config-conventional": "^19.8.1",
     "@eslint/compat": "^1.3.2",
