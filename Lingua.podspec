@@ -19,7 +19,45 @@ Pod::Spec.new do |s|
 
   # Build Rust library from source during pod install
   s.prepare_command = <<-CMD
-    cd rust && make header && make ios
+    set -e
+
+    # Check if Rust is installed
+    if ! command -v cargo &> /dev/null; then
+      echo "❌ Error: Rust is not installed."
+      echo "Please install Rust: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+      exit 1
+    fi
+
+    # Check if iOS targets are installed
+    if ! rustup target list --installed | grep -q "aarch64-apple-ios"; then
+      echo "❌ Error: iOS Rust targets not installed."
+      echo "Please run: rustup target add aarch64-apple-ios aarch64-apple-ios-sim"
+      exit 1
+    fi
+
+    # Build the xcframework
+    cd rust
+    make header
+
+    # Build for iOS targets
+    echo "Building Rust library for iOS..."
+    cargo build --release --target aarch64-apple-ios
+    cargo build --release --target aarch64-apple-ios-sim
+
+    # Create xcframework
+    mkdir -p generated/include
+    xcodebuild -create-xcframework \
+      -library target/aarch64-apple-ios/release/liblingua_native.a \
+      -headers generated/include \
+      -library target/aarch64-apple-ios-sim/release/liblingua_native.a \
+      -headers generated/include \
+      -output generated/liblingua_native.xcframework
+
+    # Copy to ios directory
+    cp -rf generated/*.xcframework ../ios/
+    cp -f generated/include/liblingua.h ../cpp/
+
+    echo "✅ Rust library built successfully"
   CMD
 
   install_modules_dependencies(s)
