@@ -8,7 +8,7 @@ PODS:
   - hermes-engine (0.82.1):
     - hermes-engine/Pre-built (= 0.82.1)
   - hermes-engine/Pre-built (0.82.1)
-  - Lingua (0.1.0):
+  - Lingua (0.1.2):
     - boost
     - DoubleConversion
     - fast_float
@@ -2683,8 +2683,8 @@ SPEC CHECKSUMS:
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
   glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
   hermes-engine: 273e30e7fb618279934b0b95ffab60ecedb7acf5
-  Lingua: 3b176d002255e642d40d01119e158ff826cf2524
-  RCT-Folly: 59ec0ac1f2f39672a0c6e6cecdd39383b764646f
+  Lingua: c5bf331e97baee61288c77a968d4fa6c7ae939d5
+  RCT-Folly: 846fda9475e61ec7bcbf8a3fe81edfcaeb090669
   RCTDeprecation: f17e2ebc07876ca9ab8eb6e4b0a4e4647497ae3a
   RCTRequired: e2c574c1b45231f7efb0834936bd609d75072b63
   RCTTypeSafety: c693294e3993056955c3010eb1ebc574f1fcded6
