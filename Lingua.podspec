@@ -17,5 +17,10 @@ Pod::Spec.new do |s|
   s.private_header_files = "ios/**/*.h"
   s.vendored_frameworks = "ios/*.xcframework"
 
+  # Build Rust library from source during pod install
+  s.prepare_command = <<-CMD
+    cd rust && make header && make ios
+  CMD
+
   install_modules_dependencies(s)
 end

@@ -86,6 +86,30 @@ repositories {
   google()
 }
 
+// Build Rust library before native build
+task buildRustHeader(type: Exec) {
+  workingDir file("${projectDir}/../rust")
+  commandLine 'make', 'header'
+
+  // Always run to ensure header is up to date
+}
+
+task buildRust(type: Exec) {
+  workingDir file("${projectDir}/../rust")
+  commandLine 'make', 'android'
+
+  // Only run if jniLibs don't exist
+  onlyIf {
+    !file("${projectDir}/jniLibs/arm64-v8a/liblingua_native.a").exists()
+  }
+
+  dependsOn buildRustHeader
+}
+
+tasks.matching { it.name.startsWith('externalNativeBuild') }.configureEach {
+  dependsOn buildRust
+}
+
 def kotlin_version = getExtOrDefault("kotlinVersion")
 
 dependencies {

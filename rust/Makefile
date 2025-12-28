@@ -6,9 +6,16 @@ XCFRAMEWORK = liblingua_native.xcframework
 
 all: ios android
 
-ios: clean ios-build package-xcframework copy-ios notify
+# Generate header only (fast, for development)
+header:
+	mkdir -p generated/include
+	cargo build --lib
+	cp -f generated/include/liblingua.h ../cpp/
+	@echo "✅ Header generated and copied to cpp/"
 
-android: android-build copy-android notify
+ios: clean header ios-build package-xcframework copy-ios notify
+
+android: header android-build copy-android notify
 
 notify:
 	@echo "🟢 Build Completed!"
@@ -41,7 +48,8 @@ package-xcframework: $(ARCHS_IOS)
 
 copy-ios:
 	cp -rf generated/*.xcframework ../ios
-	@echo "✅ iOS xcframework copied"
+	cp -f generated/include/liblingua.h ../cpp/
+	@echo "✅ iOS xcframework and headers copied"
 
 ios-build:
 	cargo build --release --target aarch64-apple-ios
@@ -77,4 +85,4 @@ copy-android:
 	cp target/aarch64-linux-android/release/$(LIB_FILE) ../android/jniLibs/arm64-v8a
 	@echo "✅ Android libraries copied"
 
-.PHONY: all ios android clean notify lint fix ios-build android-build copy-ios copy-android package-xcframework
+.PHONY: all ios android clean notify lint fix ios-build android-build copy-ios copy-android package-xcframework header

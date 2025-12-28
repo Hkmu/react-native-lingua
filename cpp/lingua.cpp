@@ -1,6 +1,6 @@
 #include "lingua.h"
+#include "liblingua.h"
 #include "macros.h"
-#include <liblingua.h>
 #include <string>
 #include <vector>
 

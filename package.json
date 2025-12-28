@@ -1,6 +1,6 @@
 {
   "name": "react-native-lingua",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A lingua-rs wrapper for React Native",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
@@ -18,6 +18,7 @@
     "android",
     "ios",
     "cpp",
+    "rust",
     "*.podspec",
     "react-native.config.js",
     "!ios/build",
@@ -26,10 +27,13 @@
     "!android/gradlew",
     "!android/gradlew.bat",
     "!android/local.properties",
+    "!cpp/liblingua.h",
     "!**/__tests__",
     "!**/__fixtures__",
     "!**/__mocks__",
-    "!**/.*"
+    "!**/.*",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "example": "pnpm --filter react-native-lingua-example",
@@ -38,7 +42,6 @@
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
     "build:rust": "cd rust && make all",
-    "postinstall": "npm run build:rust || echo 'Warning: Rust build failed. Pre-built binaries may be needed.'",
     "prepare": "bob build",
     "release": "release-it --only-version"
   },

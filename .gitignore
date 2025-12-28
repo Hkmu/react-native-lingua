@@ -91,6 +91,12 @@ rust/target/
 rust/generated/
 rust/Cargo.lock
 
+# Rust analyzer cache (when opened from project root)
+target/
+
+# Generated C header (auto-generated during build)
+cpp/liblingua.h
+
 # Native library artifacts (built on install)
 android/jniLibs/
 ios/liblingua_native.xcframework/
