@@ -1,6 +1,6 @@
 {
   "name": "react-native-lingua",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "A lingua-rs wrapper for React Native",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
@@ -49,7 +49,8 @@
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
     "build:rust": "cd rust && make all",
     "prepare": "bob build",
-    "release": "release-it --only-version"
+    "release": "release-it --only-version",
+    "postinstall": "mkdir -p ios/build && touch ios/build/liblingua_native.a"
   },
   "workspaces": [
     "example"

@@ -3,18 +3,46 @@ set -e
 
 # Setup path to rust/cargo
 # Xcode doesn't load .zshrc/.bashrc, so we need to find cargo manually if not in PATH
-export PATH="$HOME/.cargo/bin:$PATH"
+CARGO_PATH="$HOME/.cargo/bin"
 
-if ! command -v cargo &> /dev/null; then
-    echo "error: Rust not found. Please install Rust: https://rustup.rs"
+if [ ! -x "$CARGO_PATH/cargo" ]; then
+    echo "error: Rust not found at $CARGO_PATH. Please install Rust: https://rustup.rs"
     exit 1
 fi
 
 # Move to rust directory
-TOOLS_DIR=$(cd "$(dirname "$0")/../rust" && pwd)
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+TOOLS_DIR="$SCRIPT_DIR/../rust"
 cd "$TOOLS_DIR"
 
 echo "Building Rust library for ARCHS=$ARCHS PLATFORM_NAME=$PLATFORM_NAME"
+
+# Find a reasonable PATH that doesn't include Xcode toolchain paths that might interfere
+# We need: cargo, rustup, basic system utilities
+CLEAN_PATH="/usr/bin:/bin:/usr/sbin:/sbin:$CARGO_PATH"
+
+# Run cargo in a clean environment to avoid Xcode's iOS-targeted env vars
+# affecting host build scripts (which need macOS SDK, not iOS SDK)
+run_cargo() {
+    env -i \
+        HOME="$HOME" \
+        PATH="$CLEAN_PATH" \
+        USER="$USER" \
+        TERM="${TERM:-xterm}" \
+        RUSTUP_HOME="${RUSTUP_HOME:-$HOME/.rustup}" \
+        CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}" \
+        "$CARGO_PATH/cargo" "$@"
+}
+
+run_rustup() {
+    env -i \
+        HOME="$HOME" \
+        PATH="$CLEAN_PATH" \
+        USER="$USER" \
+        RUSTUP_HOME="${RUSTUP_HOME:-$HOME/.rustup}" \
+        CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}" \
+        "$CARGO_PATH/rustup" "$@"
+}
 
 LIBS=()
 
@@ -39,9 +67,9 @@ for ARCH in $ARCHS; do
 
     echo "Building for $TARGET"
     # Ensure target is added
-    rustup target add "$TARGET"
+    run_rustup target add "$TARGET"
 
-    cargo build --release --target "$TARGET" --lib
+    run_cargo build --release --target "$TARGET" --lib
     LIBS+=("target/$TARGET/release/liblingua_native.a")
 done
 
@@ -53,7 +81,7 @@ if [ ! -f "$HEADER_PATH" ]; then
     mkdir -p generated/include
     # Force build.rs to run by updating mtime of main source
     touch src/lib.rs
-    cargo build --lib
+    run_cargo build --lib
 fi
 
 echo "Copying header to cpp/"

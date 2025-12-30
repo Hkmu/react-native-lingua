@@ -16,10 +16,8 @@ Pod::Spec.new do |s|
   s.source_files = "ios/**/*.{h,m,mm}", "cpp/**/*.{hpp,cpp,c,h}"
   s.private_header_files = "ios/**/*.h"
 
-  s.pod_target_xcconfig = {
-    'LIBRARY_SEARCH_PATHS' => '"$(PODS_TARGET_SRCROOT)/ios/build"',
-    'OTHER_LDFLAGS' => '-llingua_native'
-  }
+  # The static library is built by the script_phase below
+  s.vendored_libraries = "ios/build/liblingua_native.a"
 
   s.script_phase = {
     :name => 'Build Rust Library',

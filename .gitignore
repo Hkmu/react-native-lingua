@@ -100,3 +100,6 @@ cpp/liblingua.h
 # Native library artifacts (built on install)
 android/jniLibs/
 ios/liblingua_native.xcframework/
+
+
+*.tgz
