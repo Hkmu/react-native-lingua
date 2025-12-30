@@ -48,7 +48,7 @@ npm install react-native-lingua
 yarn add react-native-lingua
 ```
 
-The native libraries will be built automatically during `postinstall`.
+The native libraries will be built automatically during the native build process (Xcode/Gradle).
 
 ### iOS Setup
 

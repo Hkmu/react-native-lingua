@@ -21,7 +21,7 @@ struct ConfidenceValue {
 
 extern "C" {
 
-void set_error(const char **err, const str *error_message);
+void set_error(const char **err, const char *error_message);
 
 const char *get_error();
 

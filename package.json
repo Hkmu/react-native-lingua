@@ -1,6 +1,6 @@
 {
   "name": "react-native-lingua",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A lingua-rs wrapper for React Native",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
@@ -17,6 +17,7 @@
     "lib",
     "android",
     "ios/*.{h,mm}",
+    "ios/build.sh",
     "cpp",
     "rust/src",
     "rust/Cargo.toml",

@@ -98,10 +98,7 @@ task buildRust(type: Exec) {
   workingDir file("${projectDir}/../rust")
   commandLine 'make', 'android'
 
-  // Only run if jniLibs don't exist
-  onlyIf {
-    !file("${projectDir}/jniLibs/arm64-v8a/liblingua_native.a").exists()
-  }
+
 
   dependsOn buildRustHeader
 }
