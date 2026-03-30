@@ -23,7 +23,7 @@ const SAMPLE_TEXTS = [
   { text: 'Bonjour, comment allez-vous?', expected: 'fr' },
   { text: 'Hola, ¿cómo estás?', expected: 'es' },
   { text: 'Hallo, wie geht es dir?', expected: 'de' },
-  { text: 'Ciao, come stai?', expected: 'it' },
+  { text: 'Ciao, come stai oggi?', expected: 'it' },
   { text: 'Olá, como você está?', expected: 'pt' },
   { text: 'Привет, как дела?', expected: 'ru' },
   { text: 'こんにちは、元気ですか？', expected: 'ja' },
