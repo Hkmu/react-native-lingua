@@ -1,2 +1,5 @@
 packages:
-  - 'example'
+  - example
+
+patchedDependencies:
+  react-native@0.82.1: patches/react-native@0.82.1.patch
