@@ -49,18 +49,46 @@ pub struct LinguaDetector {
     detector: LanguageDetector,
 }
 
+// Helper function to build detector with optional minimum relative distance
+fn build_detector_with_options(
+    selected_iso_codes: &[IsoCode639_1],
+    min_relative_distance: Option<f64>,
+) -> LanguageDetector {
+    let mut builder = LanguageDetectorBuilder::from_iso_codes_639_1(selected_iso_codes);
+
+    if let Some(distance) = min_relative_distance {
+        // Clamp distance to valid range [0.0, 0.99] to avoid panics
+        let clamped_distance = distance.clamp(0.0, 0.99);
+        builder.with_minimum_relative_distance(clamped_distance);
+    }
+
+    builder.build()
+}
+
 /// Creates a language detector with all languages
+/// min_relative_distance: minimum relative distance threshold (0.0-0.99), use -1.0 to disable
 #[no_mangle]
-pub extern "C" fn lingua_detector_create_all() -> *mut LinguaDetector {
-    let detector = LanguageDetectorBuilder::from_all_languages().build();
+pub extern "C" fn lingua_detector_create_all(
+    min_relative_distance: f64,
+) -> *mut LinguaDetector {
+    let mut builder = LanguageDetectorBuilder::from_all_languages();
+
+    if min_relative_distance >= 0.0 {
+        let clamped_distance = min_relative_distance.clamp(0.0, 0.99);
+        builder.with_minimum_relative_distance(clamped_distance);
+    }
+
+    let detector = builder.build();
     Box::into_raw(Box::new(LinguaDetector { detector }))
 }
 
 /// Creates a language detector with specific languages
 /// languages: comma-separated ISO 639-1 codes (e.g., "en,fr,de,es")
+/// min_relative_distance: minimum relative distance threshold (0.0-0.99), use -1.0 to disable
 #[no_mangle]
 pub unsafe extern "C" fn lingua_detector_create_from_languages(
     languages: *const c_char,
+    min_relative_distance: f64,
     error: *mut *const c_char,
 ) -> *mut LinguaDetector {
     if languages.is_null() {
@@ -97,7 +125,13 @@ pub unsafe extern "C" fn lingua_detector_create_from_languages(
         return ptr::null_mut();
     }
 
-    let detector = LanguageDetectorBuilder::from_iso_codes_639_1(&selected_iso_codes).build();
+    let distance_opt = if min_relative_distance >= 0.0 {
+        Some(min_relative_distance)
+    } else {
+        None
+    };
+
+    let detector = build_detector_with_options(&selected_iso_codes, distance_opt);
     Box::into_raw(Box::new(LinguaDetector { detector }))
 }
 

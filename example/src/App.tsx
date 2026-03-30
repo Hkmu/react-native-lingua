@@ -16,6 +16,7 @@ import {
   computeLanguageConfidenceValues,
   type LanguageDetector,
   type LanguageConfidence,
+  type DetectorOptions,
 } from 'react-native-lingua';
 
 const SAMPLE_TEXTS = [
@@ -54,6 +55,22 @@ const COMMON_LANGUAGES = [
   'he',
 ];
 
+// Minimum relative distance options for demonstration
+const DISTANCE_OPTIONS = [
+  { label: 'Off (Default)', value: -1 },
+  { label: 'Low (0.3)', value: 0.3 },
+  { label: 'Medium (0.5)', value: 0.5 },
+  { label: 'High (0.7)', value: 0.7 },
+  { label: 'Very High (0.9)', value: 0.9 },
+];
+
+// Ambiguous test samples for demonstrating minimumRelativeDistance
+const AMBIGUOUS_SAMPLES = [
+  { text: 'Ciao', description: 'Short greeting (IT/PT)' },
+  { text: 'Amor', description: 'Common word (ES/PT)' },
+  { text: 'Adeus', description: 'Goodbye (PT/GL)' },
+];
+
 export default function App() {
   const [detector, setDetector] = useState<LanguageDetector | null>(null);
   const [loading, setLoading] = useState(true);
@@ -68,15 +85,32 @@ export default function App() {
       correct: boolean;
     }>
   >([]);
+  const [minDistance, setMinDistance] = useState(-1);
+  const [ambiguousResults, setAmbiguousResults] = useState<
+    Array<{ text: string; detected: string | null; description: string }>
+  >([]);
 
   useEffect(() => {
     initializeDetector();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Re-create detector when minimum distance changes
+  useEffect(() => {
+    if (!loading) {
+      initializeDetector();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [minDistance]);
 
   const initializeDetector = async () => {
     try {
       console.log('Creating language detector...');
-      const det = createDetectorForLanguages(COMMON_LANGUAGES);
+      const options: DetectorOptions | undefined =
+        minDistance >= 0 ? { minimumRelativeDistance: minDistance } : undefined;
+      const det = options
+        ? createDetectorForLanguages(COMMON_LANGUAGES, options)
+        : createDetectorForLanguages(COMMON_LANGUAGES);
       setDetector(det);
       console.log('Language detector created successfully');
       setLoading(false);
@@ -84,6 +118,21 @@ export default function App() {
       console.error('Failed to create detector:', error);
       setLoading(false);
     }
+  };
+
+  const runAmbiguousTests = () => {
+    if (!detector) return;
+
+    const results = AMBIGUOUS_SAMPLES.map((sample) => {
+      const detected = detectLanguage(detector, sample.text);
+      return {
+        text: sample.text,
+        detected,
+        description: sample.description,
+      };
+    });
+
+    setAmbiguousResults(results);
   };
 
   const handleDetectLanguage = () => {
@@ -193,6 +242,75 @@ export default function App() {
                   </View>
                   <Text style={styles.confidenceValue}>
                     {(conf.confidence * 100).toFixed(1)}%
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Detection Settings</Text>
+          <Text style={styles.settingDescription}>
+            Minimum Relative Distance helps avoid false positives on ambiguous
+            short text (e.g., "Ciao" in Italian vs Portuguese). Higher values
+            require more confidence to return a result.
+          </Text>
+          <View style={styles.distanceOptions}>
+            {DISTANCE_OPTIONS.map((option) => (
+              <TouchableOpacity
+                key={option.value}
+                style={[
+                  styles.distanceButton,
+                  minDistance === option.value && styles.distanceButtonActive,
+                ]}
+                onPress={() => setMinDistance(option.value)}
+              >
+                <Text
+                  style={[
+                    styles.distanceButtonText,
+                    minDistance === option.value &&
+                      styles.distanceButtonTextActive,
+                  ]}
+                >
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Ambiguous Text Test</Text>
+          <Text style={styles.settingDescription}>
+            These short words exist in multiple languages. With minimum distance
+            enabled, detection returns null for ambiguous cases instead of
+            guessing.
+          </Text>
+          <TouchableOpacity
+            style={[styles.button, styles.secondaryButton]}
+            onPress={runAmbiguousTests}
+          >
+            <Text style={styles.buttonText}>Test Ambiguous Samples</Text>
+          </TouchableOpacity>
+
+          {ambiguousResults.length > 0 && (
+            <View style={styles.ambiguousResults}>
+              {ambiguousResults.map((result, idx) => (
+                <View key={idx} style={styles.ambiguousResult}>
+                  <View style={styles.ambiguousHeader}>
+                    <Text style={styles.ambiguousText}>"{result.text}"</Text>
+                    <Text
+                      style={[
+                        styles.ambiguousDetected,
+                        result.detected === null && styles.ambiguousNull,
+                      ]}
+                    >
+                      {result.detected?.toUpperCase() || 'NULL (ambiguous)'}
+                    </Text>
+                  </View>
+                  <Text style={styles.ambiguousDescription}>
+                    {result.description}
                   </Text>
                 </View>
               ))}
@@ -447,5 +565,73 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#f44336',
     textAlign: 'center',
+  },
+  settingDescription: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 12,
+    lineHeight: 18,
+  },
+  distanceOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  distanceButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    backgroundColor: '#f0f0f0',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  distanceButtonActive: {
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
+  },
+  distanceButtonText: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
+  },
+  distanceButtonTextActive: {
+    color: 'white',
+  },
+  secondaryButton: {
+    backgroundColor: '#6c757d',
+  },
+  ambiguousResults: {
+    marginTop: 12,
+  },
+  ambiguousResult: {
+    padding: 12,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    marginBottom: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#007AFF',
+  },
+  ambiguousHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  ambiguousText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  ambiguousDetected: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#2e7d32',
+  },
+  ambiguousNull: {
+    color: '#ff9800',
+  },
+  ambiguousDescription: {
+    fontSize: 12,
+    color: '#666',
   },
 });

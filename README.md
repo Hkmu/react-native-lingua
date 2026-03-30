@@ -156,13 +156,39 @@ Creates a language detector that can detect any of the 75 supported languages.
 
 **Note:** Loading all languages consumes significant memory (~1 GB). Consider using `createDetectorForLanguages()` if you know which languages to expect.
 
-### `createDetectorForLanguages(languages: string[])`
+### `createDetectorForAllLanguages(options?: DetectorOptions)`
+
+Creates a language detector that can detect any of the 75 supported languages.
+
+**Parameters:**
+
+- `options?: DetectorOptions` - Optional configuration
+  - `minimumRelativeDistance?: number` - Minimum confidence gap between top two language candidates (0.0-0.99). Higher values make detection more conservative, returning `null` for ambiguous text. Omit or use `-1` to disable (default).
+
+**Returns:** `LanguageDetector`
+
+**Note:** Loading all languages consumes significant memory (~1 GB). Consider using `createDetectorForLanguages()` if you know which languages to expect.
+
+**Example:**
+
+```typescript
+// Default behavior
+const detector = createDetectorForAllLanguages();
+
+// With minimum relative distance to avoid false positives
+const detector = createDetectorForAllLanguages({
+  minimumRelativeDistance: 0.7,
+});
+```
+
+### `createDetectorForLanguages(languages: string[], options?: DetectorOptions)`
 
 Creates a language detector for specific languages.
 
 **Parameters:**
 
 - `languages: string[]` - Array of ISO 639-1 language codes
+- `options?: DetectorOptions` - Optional configuration (see above)
 
 **Returns:** `LanguageDetector`
 
@@ -170,6 +196,11 @@ Creates a language detector for specific languages.
 
 ```typescript
 const detector = createDetectorForLanguages(['en', 'fr', 'de']);
+
+// With minimum relative distance for short/ambiguous text
+const detector = createDetectorForLanguages(['it', 'pt', 'es'], {
+  minimumRelativeDistance: 0.8,
+});
 ```
 
 ### `detectLanguage(detector: LanguageDetector, text: string)`
@@ -224,6 +255,43 @@ Computes confidence values for all languages in the detector.
 const confidences = computeLanguageConfidenceValues(detector, 'Hello');
 // [{ language: 'en', confidence: 0.95 }, ...]
 ```
+
+### Handling Ambiguous Text with `minimumRelativeDistance`
+
+Language detection uses statistical models that can struggle with short text, especially between closely related languages (e.g., Italian vs Portuguese). The `minimumRelativeDistance` option helps control this behavior.
+
+**Problem:** Short phrases like "Ciao" or "Amor" exist in multiple languages and may be misclassified.
+
+**Solution:** Set a minimum relative distance threshold to require higher confidence before returning a result.
+
+```typescript
+import {
+  createDetectorForLanguages,
+  detectLanguage,
+} from 'react-native-lingua';
+
+// Without threshold - may guess wrong for short text
+const detector = createDetectorForLanguages(['it', 'pt']);
+detectLanguage(detector, 'Ciao'); // Might return 'pt' instead of 'it'
+
+// With threshold - returns null for ambiguous text
+const detector = createDetectorForLanguages(['it', 'pt'], {
+  minimumRelativeDistance: 0.7,
+});
+detectLanguage(detector, 'Ciao'); // Returns null (ambiguous)
+detectLanguage(detector, 'Ciao, come stai oggi?'); // Returns 'it' (confident)
+```
+
+**Recommended values:**
+
+| Value | Behavior | Use Case |
+|-------|----------|----------|
+| `-1` or omitted | Disabled (default) | General text, longer sentences |
+| `0.0` - `0.3` | Lenient | Mixed content, some ambiguity acceptable |
+| `0.4` - `0.6` | Moderate | Short messages, related languages |
+| `0.7` - `0.9` | Strict | Very short text, high accuracy required |
+
+**Note:** The value represents the minimum logarithmized probability distance between the top two candidates. Higher values mean stricter detection. Values above `0.99` are not allowed by the underlying library.
 
 ## Performance Tips
 

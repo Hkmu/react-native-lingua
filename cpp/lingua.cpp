@@ -29,7 +29,13 @@ void install(jsi::Runtime &rt, std::shared_ptr<react::CallInvoker> invoker) {
   // createDetectorForAllLanguages
   auto createDetectorForAllLanguages =
       HOST_STATIC_FN("createDetectorForAllLanguages") {
-    void *detector = lingua_detector_create_all();
+    // Optional: minimum relative distance (0.0-0.99), -1.0 to disable
+    double minRelativeDistance = -1.0;
+    if (count >= 1 && args[0].isNumber()) {
+      minRelativeDistance = args[0].asNumber();
+    }
+
+    void *detector = lingua_detector_create_all(minRelativeDistance);
 
     if (detector == nullptr) {
       throw jsi::JSError(rt, "Failed to create language detector");
@@ -43,6 +49,7 @@ void install(jsi::Runtime &rt, std::shared_ptr<react::CallInvoker> invoker) {
   });
 
   // createDetectorForLanguages
+  // Args: languages (string), optional minRelativeDistance (number)
   auto createDetectorForLanguages =
       HOST_STATIC_FN("createDetectorForLanguages") {
     if (count < 1 || !args[0].isString()) {
@@ -50,10 +57,16 @@ void install(jsi::Runtime &rt, std::shared_ptr<react::CallInvoker> invoker) {
     }
 
     std::string langCodes = args[0].asString(rt).utf8(rt);
-    const char *error = nullptr;
 
-    void *detector =
-        lingua_detector_create_from_languages(langCodes.c_str(), &error);
+    // Optional: minimum relative distance (0.0-0.99), -1.0 to disable
+    double minRelativeDistance = -1.0;
+    if (count >= 2 && args[1].isNumber()) {
+      minRelativeDistance = args[1].asNumber();
+    }
+
+    const char *error = nullptr;
+    void *detector = lingua_detector_create_from_languages(
+        langCodes.c_str(), minRelativeDistance, &error);
 
     if (detector == nullptr) {
       std::string errorMsg = "Failed to create detector";

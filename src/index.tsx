@@ -11,10 +11,28 @@ export type LanguageConfidence = {
   confidence: number;
 };
 
+// Options for creating a language detector
+export type DetectorOptions = {
+  /**
+   * Minimum relative distance threshold (0.0 - 0.99).
+   * When set, the detector requires that the top language candidate's confidence
+   * be sufficiently higher than the second-best candidate. If the distance is
+   * too small, detection returns null instead of a potentially wrong guess.
+   * This helps with ambiguous text (e.g., short phrases in related languages).
+   * Set to -1 or omit to disable (default behavior).
+   */
+  minimumRelativeDistance?: number;
+};
+
 // Internal proxy that gets injected by JSI
 type LinguaProxy = {
-  createDetectorForAllLanguages: () => LanguageDetector;
-  createDetectorForLanguages: (languages: string) => LanguageDetector;
+  createDetectorForAllLanguages: (
+    minRelativeDistance: number
+  ) => LanguageDetector;
+  createDetectorForLanguages: (
+    languages: string,
+    minRelativeDistance: number
+  ) => LanguageDetector;
   detectLanguage: (detector: LanguageDetector, text: string) => string | null;
   computeLanguageConfidence: (
     detector: LanguageDetector,
@@ -48,26 +66,33 @@ if (proxy == null) {
 
 /**
  * Creates a language detector for all supported languages
+ * @param options Optional configuration for the detector
  */
-export function createDetectorForAllLanguages(): LanguageDetector {
+export function createDetectorForAllLanguages(
+  options?: DetectorOptions
+): LanguageDetector {
   if (!proxy) {
     throw new Error('Lingua JSI proxy not available');
   }
-  return proxy.createDetectorForAllLanguages();
+  const minRelativeDistance = options?.minimumRelativeDistance ?? -1.0;
+  return proxy.createDetectorForAllLanguages(minRelativeDistance);
 }
 
 /**
  * Creates a language detector for specific languages
  * @param languages Array of ISO 639-1 language codes (e.g., ['en', 'fr', 'de'])
+ * @param options Optional configuration for the detector
  */
 export function createDetectorForLanguages(
-  languages: string[]
+  languages: string[],
+  options?: DetectorOptions
 ): LanguageDetector {
   if (!proxy) {
     throw new Error('Lingua JSI proxy not available');
   }
   const langString = languages.join(',');
-  return proxy.createDetectorForLanguages(langString);
+  const minRelativeDistance = options?.minimumRelativeDistance ?? -1.0;
+  return proxy.createDetectorForLanguages(langString, minRelativeDistance);
 }
 
 /**

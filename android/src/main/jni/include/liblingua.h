@@ -26,11 +26,15 @@ void set_error(const char **err, const char *error_message);
 const char *get_error();
 
 /// Creates a language detector with all languages
-LinguaDetector *lingua_detector_create_all();
+/// min_relative_distance: minimum relative distance threshold (0.0-0.99), use -1.0 to disable
+LinguaDetector *lingua_detector_create_all(double min_relative_distance);
 
 /// Creates a language detector with specific languages
 /// languages: comma-separated ISO 639-1 codes (e.g., "en,fr,de,es")
-LinguaDetector *lingua_detector_create_from_languages(const char *languages, const char **error);
+/// min_relative_distance: minimum relative distance threshold (0.0-0.99), use -1.0 to disable
+LinguaDetector *lingua_detector_create_from_languages(const char *languages,
+                                                      double min_relative_distance,
+                                                      const char **error);
 
 /// Detects the language of the given text
 /// Returns the ISO 639-1 code (e.g., "en") or null if detection failed
@@ -58,8 +62,8 @@ void lingua_free_confidence_values(ConfidenceValue *values, int count);
 /// Destroys the detector and frees memory
 void lingua_detector_destroy(LinguaDetector *detector);
 
-} // extern "C"
+}  // extern "C"
 
-} // namespace lingua
+}  // namespace lingua
 
-#endif // lingua_h
+#endif  // lingua_h
