@@ -4,7 +4,15 @@ COMMA := ,
 # reinstalling or patching the npm dependency never strands gigabytes of
 # build output inside node_modules. Override with the standard
 # CARGO_TARGET_DIR if you prefer another location.
+ifeq ($(OS),Windows_NT)
+ifdef LOCALAPPDATA
+CARGO_TARGET_DIR ?= $(LOCALAPPDATA)/react-native-lingua/rust-target
+else
+CARGO_TARGET_DIR ?= $(USERPROFILE)/react-native-lingua/rust-target
+endif
+else
 CARGO_TARGET_DIR ?= $(HOME)/.cache/react-native-lingua/rust-target
+endif
 export CARGO_TARGET_DIR
 
 # Android static libs are copied here for CMake to link against. Gradle

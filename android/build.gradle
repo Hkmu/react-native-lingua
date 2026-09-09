@@ -28,9 +28,19 @@ def getExtOrIntegerDefault(name) {
 // Rust build cache lives outside the package (and outside node_modules) so
 // that reinstalling or patching the npm dependency never strands gigabytes
 // of build output. Override with the standard CARGO_TARGET_DIR.
+// Must match the Makefile's platform-aware default: ~/.cache on unix,
+// %LOCALAPPDATA% on Windows.
+def linguaDefaultCacheDir = {
+  def isWindows = System.getProperty('os.name').toLowerCase().contains('windows')
+  if (isWindows) {
+    def localAppData = System.getenv('LOCALAPPDATA') ?:
+        "${System.getProperty('user.home')}/AppData/Local"
+    return "${localAppData}/react-native-lingua/rust-target"
+  }
+  "${System.getProperty('user.home')}/.cache/react-native-lingua/rust-target"
+}()
 def linguaTargetDir = System.getenv('CARGO_TARGET_DIR') ?:
-    (project.findProperty('LINGUA_CARGO_TARGET_DIR') ?:
-        "${System.getProperty('user.home')}/.cache/react-native-lingua/rust-target")
+    (project.findProperty('LINGUA_CARGO_TARGET_DIR') ?: linguaDefaultCacheDir)
 def linguaJniLibDir = "${linguaTargetDir}/jni"
 
 // Pick ABIs: the app's reactNativeArchitectures wins, then LINGUA_ANDROID_ABIS,

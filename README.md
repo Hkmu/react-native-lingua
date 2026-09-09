@@ -72,9 +72,10 @@ npm run build:rust
 ## Build Configuration
 
 The Rust library is built from source on the consumer's machine, and its
-artifacts are cached in `~/.cache/react-native-lingua/rust-target` — outside
-the package (and therefore outside `node_modules`), shared across all your
-projects. Reinstalling or patching the npm dependency never strands gigabytes
+artifacts are cached outside the package (and therefore outside
+`node_modules`), shared across all your projects: `~/.cache/react-native-lingua/rust-target`
+on macOS and Linux, `%LOCALAPPDATA%\react-native-lingua\rust-target` on
+Windows. Reinstalling or patching the npm dependency never strands gigabytes
 of stale build output behind. Override the location with the standard
 `CARGO_TARGET_DIR` environment variable.
 
