@@ -8,9 +8,176 @@ name = "lingua_native"
 crate-type = ["staticlib", "cdylib"]
 
 [dependencies]
-lingua = "1.8.0"
+lingua = { version = "1.8.0", default-features = false }
 libc = "0.2.183"
 lazy_static = "1.5.0"
 
 [build-dependencies]
 cbindgen = "0.29.2"
+
+# Language models are feature-gated. The default build compiles all 75
+# languages (~330MB static lib per target). Build scripts pass
+# --no-default-features --features <names> when LINGUA_LANGUAGES is set,
+# so consumers can compile only the languages they need.
+[features]
+default = ["all-languages"]
+all-languages = [
+  "lingua/afrikaans",
+  "lingua/albanian",
+  "lingua/arabic",
+  "lingua/armenian",
+  "lingua/azerbaijani",
+  "lingua/basque",
+  "lingua/belarusian",
+  "lingua/bengali",
+  "lingua/bokmal",
+  "lingua/bosnian",
+  "lingua/bulgarian",
+  "lingua/catalan",
+  "lingua/chinese",
+  "lingua/croatian",
+  "lingua/czech",
+  "lingua/danish",
+  "lingua/dutch",
+  "lingua/english",
+  "lingua/esperanto",
+  "lingua/estonian",
+  "lingua/finnish",
+  "lingua/french",
+  "lingua/ganda",
+  "lingua/georgian",
+  "lingua/german",
+  "lingua/greek",
+  "lingua/gujarati",
+  "lingua/hebrew",
+  "lingua/hindi",
+  "lingua/hungarian",
+  "lingua/icelandic",
+  "lingua/indonesian",
+  "lingua/irish",
+  "lingua/italian",
+  "lingua/japanese",
+  "lingua/kazakh",
+  "lingua/korean",
+  "lingua/latin",
+  "lingua/latvian",
+  "lingua/lithuanian",
+  "lingua/macedonian",
+  "lingua/malay",
+  "lingua/maori",
+  "lingua/marathi",
+  "lingua/mongolian",
+  "lingua/nynorsk",
+  "lingua/persian",
+  "lingua/polish",
+  "lingua/portuguese",
+  "lingua/punjabi",
+  "lingua/romanian",
+  "lingua/russian",
+  "lingua/serbian",
+  "lingua/shona",
+  "lingua/slovak",
+  "lingua/slovene",
+  "lingua/somali",
+  "lingua/sotho",
+  "lingua/spanish",
+  "lingua/swahili",
+  "lingua/swedish",
+  "lingua/tagalog",
+  "lingua/tamil",
+  "lingua/telugu",
+  "lingua/thai",
+  "lingua/tsonga",
+  "lingua/tswana",
+  "lingua/turkish",
+  "lingua/ukrainian",
+  "lingua/urdu",
+  "lingua/vietnamese",
+  "lingua/welsh",
+  "lingua/xhosa",
+  "lingua/yoruba",
+  "lingua/zulu",
+]
+afrikaans = ["lingua/afrikaans"]
+albanian = ["lingua/albanian"]
+arabic = ["lingua/arabic"]
+armenian = ["lingua/armenian"]
+azerbaijani = ["lingua/azerbaijani"]
+basque = ["lingua/basque"]
+belarusian = ["lingua/belarusian"]
+bengali = ["lingua/bengali"]
+bokmal = ["lingua/bokmal"]
+bosnian = ["lingua/bosnian"]
+bulgarian = ["lingua/bulgarian"]
+catalan = ["lingua/catalan"]
+chinese = ["lingua/chinese"]
+croatian = ["lingua/croatian"]
+czech = ["lingua/czech"]
+danish = ["lingua/danish"]
+dutch = ["lingua/dutch"]
+english = ["lingua/english"]
+esperanto = ["lingua/esperanto"]
+estonian = ["lingua/estonian"]
+finnish = ["lingua/finnish"]
+french = ["lingua/french"]
+ganda = ["lingua/ganda"]
+georgian = ["lingua/georgian"]
+german = ["lingua/german"]
+greek = ["lingua/greek"]
+gujarati = ["lingua/gujarati"]
+hebrew = ["lingua/hebrew"]
+hindi = ["lingua/hindi"]
+hungarian = ["lingua/hungarian"]
+icelandic = ["lingua/icelandic"]
+indonesian = ["lingua/indonesian"]
+irish = ["lingua/irish"]
+italian = ["lingua/italian"]
+japanese = ["lingua/japanese"]
+kazakh = ["lingua/kazakh"]
+korean = ["lingua/korean"]
+latin = ["lingua/latin"]
+latvian = ["lingua/latvian"]
+lithuanian = ["lingua/lithuanian"]
+macedonian = ["lingua/macedonian"]
+malay = ["lingua/malay"]
+maori = ["lingua/maori"]
+marathi = ["lingua/marathi"]
+mongolian = ["lingua/mongolian"]
+nynorsk = ["lingua/nynorsk"]
+persian = ["lingua/persian"]
+polish = ["lingua/polish"]
+portuguese = ["lingua/portuguese"]
+punjabi = ["lingua/punjabi"]
+romanian = ["lingua/romanian"]
+russian = ["lingua/russian"]
+serbian = ["lingua/serbian"]
+shona = ["lingua/shona"]
+slovak = ["lingua/slovak"]
+slovene = ["lingua/slovene"]
+somali = ["lingua/somali"]
+sotho = ["lingua/sotho"]
+spanish = ["lingua/spanish"]
+swahili = ["lingua/swahili"]
+swedish = ["lingua/swedish"]
+tagalog = ["lingua/tagalog"]
+tamil = ["lingua/tamil"]
+telugu = ["lingua/telugu"]
+thai = ["lingua/thai"]
+tsonga = ["lingua/tsonga"]
+tswana = ["lingua/tswana"]
+turkish = ["lingua/turkish"]
+ukrainian = ["lingua/ukrainian"]
+urdu = ["lingua/urdu"]
+vietnamese = ["lingua/vietnamese"]
+welsh = ["lingua/welsh"]
+xhosa = ["lingua/xhosa"]
+yoruba = ["lingua/yoruba"]
+zulu = ["lingua/zulu"]
+
+# These profiles apply because this crate is always built as the root
+# manifest (iOS pod script / Android gradle task build it standalone).
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.release]
+strip = "debuginfo"

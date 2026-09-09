@@ -21,8 +21,11 @@ include_directories(
   ../rust/generated/include
 )
 
-# Link the lingua_native static library
-cmake_path(SET LINGUA_LIB_PATH ${CMAKE_CURRENT_SOURCE_DIR}/jniLibs/${ANDROID_ABI}/liblingua_native.a NORMALIZE)
+# Link the lingua_native static library.
+# LINGUA_LIB_DIR is passed by build.gradle pointing outside the npm package;
+# the in-package jniLibs/ directory remains the default for manual builds.
+set(LINGUA_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/jni" CACHE PATH "Directory containing per-ABI liblingua_native.a")
+cmake_path(SET LINGUA_LIB_PATH ${LINGUA_LIB_DIR}/${ANDROID_ABI}/liblingua_native.a NORMALIZE)
 add_library(lingua_native STATIC IMPORTED)
 set_target_properties(lingua_native PROPERTIES IMPORTED_LOCATION ${LINGUA_LIB_PATH})
 

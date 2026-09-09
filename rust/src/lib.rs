@@ -49,22 +49,6 @@ pub struct LinguaDetector {
     detector: LanguageDetector,
 }
 
-// Helper function to build detector with optional minimum relative distance
-fn build_detector_with_options(
-    selected_iso_codes: &[IsoCode639_1],
-    min_relative_distance: Option<f64>,
-) -> LanguageDetector {
-    let mut builder = LanguageDetectorBuilder::from_iso_codes_639_1(selected_iso_codes);
-
-    if let Some(distance) = min_relative_distance {
-        // Clamp distance to valid range [0.0, 0.99] to avoid panics
-        let clamped_distance = distance.clamp(0.0, 0.99);
-        builder.with_minimum_relative_distance(clamped_distance);
-    }
-
-    builder.build()
-}
-
 /// Creates a language detector with all languages
 /// min_relative_distance: minimum relative distance threshold (0.0-0.99), use -1.0 to disable
 #[no_mangle]
@@ -106,12 +90,29 @@ pub unsafe extern "C" fn lingua_detector_create_from_languages(
     };
 
     let lang_codes: Vec<&str> = lang_str.split(',').map(|s| s.trim()).collect();
-    let mut selected_iso_codes = Vec::new();
+    // Only languages compiled into this binary exist in Language::all().
+    // lingua panics if asked for a missing model, so resolve through the
+    // compiled set and report a proper error instead.
+    let compiled_languages = Language::all();
+    let mut selected_languages = Vec::new();
 
     for code in lang_codes {
         let upper_code = code.to_uppercase();
         match IsoCode639_1::from_str(&upper_code) {
-            Ok(iso_code) => selected_iso_codes.push(iso_code),
+            Ok(iso_code) => match compiled_languages
+                .iter()
+                .find(|lang| lang.iso_code_639_1() == iso_code)
+            {
+                Some(language) => selected_languages.push(*language),
+                None => {
+                    let error_msg = format!(
+                        "Language {} is not compiled into this build (see LINGUA_LANGUAGES)",
+                        code
+                    );
+                    set_error_internal(error, &error_msg);
+                    return ptr::null_mut();
+                }
+            },
             Err(_) => {
                 let error_msg = format!("Invalid language code: {}", code);
                 set_error_internal(error, &error_msg);
@@ -120,18 +121,19 @@ pub unsafe extern "C" fn lingua_detector_create_from_languages(
         }
     }
 
-    if selected_iso_codes.is_empty() {
+    if selected_languages.is_empty() {
         set_error_internal(error, "No valid languages provided");
         return ptr::null_mut();
     }
 
-    let distance_opt = if min_relative_distance >= 0.0 {
-        Some(min_relative_distance)
-    } else {
-        None
-    };
+    let mut builder = LanguageDetectorBuilder::from_languages(&selected_languages);
 
-    let detector = build_detector_with_options(&selected_iso_codes, distance_opt);
+    if min_relative_distance >= 0.0 {
+        let clamped_distance = min_relative_distance.clamp(0.0, 0.99);
+        builder.with_minimum_relative_distance(clamped_distance);
+    }
+
+    let detector = builder.build();
     Box::into_raw(Box::new(LinguaDetector { detector }))
 }
 

@@ -69,6 +69,43 @@ cd node_modules/react-native-lingua
 npm run build:rust
 ```
 
+## Build Configuration
+
+The Rust library is built from source on the consumer's machine, and its
+artifacts are cached in `~/.cache/react-native-lingua/rust-target` — outside
+the package (and therefore outside `node_modules`), shared across all your
+projects. Reinstalling or patching the npm dependency never strands gigabytes
+of stale build output behind. Override the location with the standard
+`CARGO_TARGET_DIR` environment variable.
+
+### Language Subset (smaller and faster builds)
+
+By default all 75 languages are compiled in, producing a large static library
+per target. To compile only what your app needs, set `LINGUA_LANGUAGES` to a
+comma-separated list of lingua feature names:
+
+```sh
+export LINGUA_LANGUAGES="english,chinese,japanese,spanish"
+```
+
+- **iOS**: export the variable in the shell that runs `pod install` /
+  `xcodebuild` (or in your Xcode scheme). Changing the value requires a clean
+  of the pod build, since the Xcode script phase caches on file inputs.
+- **Android**: add `LINGUA_LANGUAGES=english,chinese` to `gradle.properties`
+  (or export it). The Gradle task always re-runs, so the next build picks it
+  up.
+
+Creating a detector for a language that is not compiled in returns an error
+instead of crashing. `createDetectorForAllLanguages` covers exactly the
+compiled-in languages.
+
+### Android ABIs
+
+The Gradle plugin builds `arm64-v8a` and `x86_64` by default. It follows the
+app's `reactNativeArchitectures` property when set; `LINGUA_ANDROID_ABIS`
+(for example `arm64-v8a,armeabi-v7a`) overrides both. The NDK version follows
+the app's root `ndkVersion` ext when present.
+
 ## Usage
 
 ### Basic Language Detection

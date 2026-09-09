@@ -25,10 +25,45 @@ def getExtOrIntegerDefault(name) {
   return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties["Lingua_" + name]).toInteger()
 }
 
+// Rust build cache lives outside the package (and outside node_modules) so
+// that reinstalling or patching the npm dependency never strands gigabytes
+// of build output. Override with the standard CARGO_TARGET_DIR.
+def linguaTargetDir = System.getenv('CARGO_TARGET_DIR') ?:
+    (project.findProperty('LINGUA_CARGO_TARGET_DIR') ?:
+        "${System.getProperty('user.home')}/.cache/react-native-lingua/rust-target")
+def linguaJniLibDir = "${linguaTargetDir}/jni"
+
+// Pick ABIs: the app's reactNativeArchitectures wins, then LINGUA_ANDROID_ABIS,
+// then the default (arm64 devices + x86_64 emulators).
+def linguaAbiList = {
+  def rn = rootProject.findProperty('reactNativeArchitectures')
+  def raw = rn != null ? rn.toString() :
+      (project.findProperty('LINGUA_ANDROID_ABIS') ?: 'arm64-v8a,x86_64').toString()
+  return raw.split(',').collect { it.trim() }.findAll { it }
+}()
+
+def linguaTripleMap = [
+  'arm64-v8a'    : 'aarch64-linux-android',
+  'armeabi-v7a'  : 'armv7-linux-androideabi',
+  'x86'          : 'i686-linux-android',
+  'x86_64'       : 'x86_64-linux-android'
+]
+def linguaAndroidTriples = linguaAbiList.collect { linguaTripleMap[it] }.findAll { it }
+if (linguaAndroidTriples.size() != linguaAbiList.size()) {
+  throw new GradleException(
+      "Lingua: unsupported ABI in [${linguaAbiList.join(', ')}]. Supported: ${linguaTripleMap.keySet().join(', ')}")
+}
+
+// Optional comma-separated language subset (lingua feature names),
+// e.g. LINGUA_LANGUAGES=english,chinese. Empty means all 75 languages.
+def linguaLanguages = project.findProperty('LINGUA_LANGUAGES') ?:
+    System.getenv('LINGUA_LANGUAGES') ?: ''
+
 android {
   namespace "com.lingua"
 
-  ndkVersion = "26.1.10909125"
+  // Follow the app's NDK pin (root build.gradle ext) when present
+  ndkVersion = rootProject.hasProperty('ndkVersion') ? rootProject.ext.get('ndkVersion') : "26.1.10909125"
 
   compileSdkVersion getExtOrIntegerDefault("compileSdkVersion")
 
@@ -39,8 +74,9 @@ android {
     externalNativeBuild {
       cmake {
         cppFlags "-O2 -frtti -fexceptions -Wall -Wno-unused-variable -fstack-protector-all"
-        abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
-        arguments '-DANDROID_STL=c++_shared'
+        abiFilters(*linguaAbiList)
+        arguments '-DANDROID_STL=c++_shared',
+                  "-DLINGUA_LIB_DIR=${linguaJniLibDir}"
       }
     }
   }
@@ -90,6 +126,10 @@ repositories {
 task buildRustHeader(type: Exec) {
   workingDir file("${projectDir}/../rust")
   commandLine 'make', 'header'
+  environment 'CARGO_TARGET_DIR', linguaTargetDir
+  if (linguaLanguages) {
+    environment 'LINGUA_LANGUAGES', linguaLanguages
+  }
 
   // Always run to ensure header is up to date
 }
@@ -97,13 +137,17 @@ task buildRustHeader(type: Exec) {
 task buildRust(type: Exec) {
   workingDir file("${projectDir}/../rust")
   commandLine 'make', 'android'
-
-
+  environment 'CARGO_TARGET_DIR', linguaTargetDir
+  environment 'JNI_LIB_DIR', linguaJniLibDir
+  environment 'ANDROID_ABIS', linguaAndroidTriples.join(' ')
+  if (linguaLanguages) {
+    environment 'LINGUA_LANGUAGES', linguaLanguages
+  }
 
   dependsOn buildRustHeader
 }
 
-tasks.matching { it.name.startsWith('externalNativeBuild') }.configureEach {
+tasks.matching { it.name.startsWith('externalNativeBuild') || it.name.startsWith('buildCMake') || it.name.startsWith('configureCMake') }.configureEach {
   dependsOn buildRust
 }
 

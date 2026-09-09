@@ -15,6 +15,19 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 TOOLS_DIR="$SCRIPT_DIR/../rust"
 cd "$TOOLS_DIR"
 
+# Cargo artifacts go to a shared cache outside the package so that
+# reinstalling or patching the npm dependency never strands gigabytes of
+# build output inside node_modules. Override with the standard CARGO_TARGET_DIR.
+CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$HOME/.cache/react-native-lingua/rust-target}"
+export CARGO_TARGET_DIR
+
+# Optional language subset (lingua feature names), e.g. LINGUA_LANGUAGES="english,chinese".
+# Empty means all 75 languages.
+FEATURE_ARGS=""
+if [ -n "$LINGUA_LANGUAGES" ]; then
+    FEATURE_ARGS="--no-default-features --features $LINGUA_LANGUAGES"
+fi
+
 echo "Building Rust library for ARCHS=$ARCHS PLATFORM_NAME=$PLATFORM_NAME"
 
 # Find a reasonable PATH that doesn't include Xcode toolchain paths that might interfere
@@ -31,6 +44,7 @@ run_cargo() {
         TERM="${TERM:-xterm}" \
         RUSTUP_HOME="${RUSTUP_HOME:-$HOME/.rustup}" \
         CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}" \
+        CARGO_TARGET_DIR="$CARGO_TARGET_DIR" \
         "$CARGO_PATH/cargo" "$@"
 }
 
@@ -69,8 +83,9 @@ for ARCH in $ARCHS; do
     # Ensure target is added
     run_rustup target add "$TARGET"
 
-    run_cargo build --release --target "$TARGET" --lib
-    LIBS+=("target/$TARGET/release/liblingua_native.a")
+    # NOTE: $FEATURE_ARGS is intentionally unquoted (word splitting is wanted)
+    run_cargo build --release --target "$TARGET" --lib $FEATURE_ARGS
+    LIBS+=("$CARGO_TARGET_DIR/$TARGET/release/liblingua_native.a")
 done
 
 # Ensure header is generated and copied
@@ -81,7 +96,7 @@ if [ ! -f "$HEADER_PATH" ]; then
     mkdir -p generated/include
     # Force build.rs to run by updating mtime of main source
     touch src/lib.rs
-    run_cargo build --lib
+    run_cargo build --lib $FEATURE_ARGS
 fi
 
 echo "Copying header to cpp/"
